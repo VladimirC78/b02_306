@@ -66,7 +66,7 @@ class Ball:
 
         if self.vx == 0 or self.vy == 0:
             self.resting_timer += 1
-        if self.resting_timer > 0.25 * FPS:
+        if self.resting_timer > 0.3 * FPS:
             balls.remove(self)
 
     def draw(self):
