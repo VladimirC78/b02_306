@@ -145,6 +145,11 @@ class Gun:
 
 
 class Target:
+    def __init__(self, screen):
+        self.screen = screen
+        self.points = 0
+        self.live = 1
+        self.new_target()
     # self.points = 0
     # self.live = 1
     # FIXME: don't work!!! How to call this functions when object is created?
@@ -152,9 +157,9 @@ class Target:
 
     def new_target(self):
         """ Инициализация новой цели. """
-        x = self.x = choice.rnd(600, 780)
-        y = self.y = choice.rnd(300, 550)
-        r = self.r = choice.rnd(2, 50)
+        self.x = choice(range(600, 780))
+        self.y = choice(range(300, 550))
+        self.r = choice(range(2, 50))
         color = self.color = RED
 
     def hit(self, points=1):
@@ -162,7 +167,7 @@ class Target:
         self.points += points
 
     def draw(self):
-        ...
+        pygame.draw.circle(self.screen, self.color, (self.x, self.y), self.r)
 
 
 pygame.init()
@@ -172,7 +177,7 @@ balls = []
 
 clock = pygame.time.Clock()
 gun = Gun(screen)
-target = Target()
+target = Target(screen)
 finished = False
 
 while not finished:
