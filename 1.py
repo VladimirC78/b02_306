@@ -87,11 +87,10 @@ class Ball:
         """
         # FIXME
 
-        # if (self.x - obj.x)**2 + (self.y - obj.y)**2 <= (self.r + obj.r)**2:
-        #     return True
-        # else:
-        #     return False
-        return False
+        if (self.x - obj.x)**2 + (self.y - obj.y)**2 <= (self.r + obj.r)**2:
+            return True
+        else:
+            return False
 
 
 class Gun:
@@ -148,7 +147,6 @@ class Target:
     def __init__(self, screen):
         self.screen = screen
         self.points = 0
-        self.live = 1
         self.new_target()
     # self.points = 0
     # self.live = 1
@@ -157,10 +155,11 @@ class Target:
 
     def new_target(self):
         """ Инициализация новой цели. """
-        self.x = choice(range(600, 780))
+        self.live = True
+        self.x = choice(range(500, 750))
         self.y = choice(range(300, 550))
-        self.r = choice(range(2, 50))
-        color = self.color = RED
+        self.r = choice(range(2, 40))
+        self.color = RED
 
     def hit(self, points=1):
         """Попадание шарика в цель."""
@@ -202,7 +201,7 @@ while not finished:
     for b in balls:
         b.move()
         if b.hittest(target) and target.live:
-            target.live = 0
+            target.live = False
             target.hit()
             target.new_target()
     gun.power_up()
