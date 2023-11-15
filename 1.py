@@ -5,6 +5,8 @@ import pygame
 
 
 FPS = 30
+points = 0
+midscore = 0
 
 RED = 0xFF0000
 BLUE = 0x0000FF
@@ -147,12 +149,7 @@ class Gun:
 class Target:
     def __init__(self, screen):
         self.screen = screen
-        self.points = 0
         self.new_target()
-    # self.points = 0
-    # self.live = 1
-    # FIXME: don't work!!! How to call this functions when object is created?
-    # self.new_target()
 
     def new_target(self):
         """ Инициализация новой цели. """
@@ -161,10 +158,6 @@ class Target:
         self.y = choice(range(300, 550))
         self.r = choice(range(2, 40))
         self.color = RED
-
-    def hit(self, points = 1):
-        """Попадание шарика в цель."""
-        self.points += points
 
     def draw(self):
         pygame.draw.circle(self.screen, self.color, (self.x, self.y), self.r)
@@ -184,6 +177,10 @@ while not finished:
     screen.fill(WHITE)
     gun.draw()
     target.draw()
+
+    score_text = font.render("your points: " + str(points), True, BLACK)
+    screen.blit(score_text, (10, 10))
+
     for b in balls:
         b.draw()
     pygame.display.update()
@@ -201,9 +198,10 @@ while not finished:
 
     for b in balls:
         b.move()
+        midscore += 1
         if b.hittest(target) and target.live:
             target.live = False
-            target.hit()
+            points += 1
             target.new_target()
     gun.power_up()
 pygame.quit()
