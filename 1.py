@@ -8,6 +8,7 @@ FPS = 30
 points = 0
 midscore = 0
 
+
 RED = 0xFF0000
 BLUE = 0x0000FF
 YELLOW = 0xFFC91F
@@ -178,12 +179,16 @@ while not finished:
     gun.draw()
     target.draw()
 
-    score_text = font.render("your points: " + str(points), True, BLACK)
+    score_text = font.render("Очки: " + str(points), True, BLACK)
     screen.blit(score_text, (10, 10))
+
+    midscore_text = font.render("Количество попыток: " + str(midscore), True, BLACK)
+    screen.blit(midscore_text, (270, 525))
 
     for b in balls:
         b.draw()
     pygame.display.update()
+
 
     clock.tick(FPS)
     for event in pygame.event.get():
@@ -191,6 +196,7 @@ while not finished:
             finished = True
         elif event.type == pygame.MOUSEBUTTONDOWN:
             gun.fire2_start(event)
+            midscore += 1
         elif event.type == pygame.MOUSEBUTTONUP:
             gun.fire2_end(event)
         elif event.type == pygame.MOUSEMOTION:
@@ -198,10 +204,12 @@ while not finished:
 
     for b in balls:
         b.move()
-        midscore += 1
         if b.hittest(target) and target.live:
             target.live = False
             points += 1
             target.new_target()
+            midscore = 0
     gun.power_up()
+
+
 pygame.quit()
