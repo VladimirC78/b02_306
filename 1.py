@@ -100,6 +100,8 @@ class Gun:
         self.f2_on = 0
         self.an = 1
         self.color = GREY
+        self.x = 40
+        self.y = 450
 
     def fire2_start(self, event):
         self.f2_on = 1
@@ -131,8 +133,7 @@ class Gun:
             self.color = GREY
 
     def draw(self):
-    # FIXIT don't know how to do it
-        pass
+        pygame.draw.line(self.screen, self.color, (self.x, self.y), (self.x + (self.f2_power + 10)*math.cos(self.an), self.y + (self.f2_power + 10)*math.sin(self.an)), 10)
 
     def power_up(self):
         if self.f2_on:
@@ -161,7 +162,7 @@ class Target:
         self.r = choice(range(2, 40))
         self.color = RED
 
-    def hit(self, points=1):
+    def hit(self, points = 1):
         """Попадание шарика в цель."""
         self.points += points
 
@@ -173,7 +174,7 @@ pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 bullet = 0
 balls = []
-
+font = pygame.font.Font(None, 36)
 clock = pygame.time.Clock()
 gun = Gun(screen)
 target = Target(screen)
@@ -205,5 +206,4 @@ while not finished:
             target.hit()
             target.new_target()
     gun.power_up()
-
 pygame.quit()
