@@ -170,7 +170,7 @@ class Target:
         self.y += self.vy
         self.timer += 1
 
-        if self.timer >= 50 * self.n:
+        if self.timer >= 55 * self.n:
             self.vy = choice(range(-10, 10))
             self.vx = choice(range(-10, 10))
             self.n += 1
