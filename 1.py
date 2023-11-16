@@ -155,10 +155,12 @@ class Target:
         self.live = True
         self.x = choice(range(500, 750))
         self.y = choice(range(300, 550))
-        self.r = choice(range(2, 40))
+        self.r = choice(range(5, 40))
         self.color = RED
-        self.vx = choice(range(5, 10))
-        self.vy = choice(range(5, 10))
+        self.vy = choice(range(-10, 10))
+        self.vx = choice(range(-10, 10))
+        self.timer = 0
+        self.n = 1
 
     def draw(self):
         pygame.draw.circle(self.screen, self.color, (self.x, self.y), self.r)
@@ -166,6 +168,12 @@ class Target:
     def move(self):
         self.x += self.vx
         self.y += self.vy
+        self.timer += 1
+
+        if self.timer >= 50 * self.n:
+            self.vy = choice(range(-10, 10))
+            self.vx = choice(range(-10, 10))
+            self.n += 1
 
         if self.x >= WIDTH - self.r and self.vx > 0:
             self.x = WIDTH - self.r
