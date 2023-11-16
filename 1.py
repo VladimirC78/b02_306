@@ -49,7 +49,6 @@ class Ball:
         self.x и self.y с учетом скоростей self.vx и self.vy, силы гравитации, действующей на мяч,
         и стен по краям окна (размер окна 800х600).
         """
-        # FIXME
         self.vy -= 1.2
         self.x += self.vx
         self.y -= self.vy
@@ -88,7 +87,6 @@ class Ball:
         Returns:
             Возвращает True в случае столкновения мяча и цели. В противном случае возвращает False.
         """
-        # FIXME
 
         if (self.x - obj.x)**2 + (self.y - obj.y)**2 <= (self.r + obj.r)**2:
             return True
@@ -159,9 +157,29 @@ class Target:
         self.y = choice(range(300, 550))
         self.r = choice(range(2, 40))
         self.color = RED
+        self.vx = choice(range(5, 10))
+        self.vy = choice(range(5, 10))
 
     def draw(self):
         pygame.draw.circle(self.screen, self.color, (self.x, self.y), self.r)
+
+    def move(self):
+        self.x += self.vx
+        self.y += self.vy
+
+        if self.x >= WIDTH - self.r and self.vx > 0:
+            self.x = WIDTH - self.r
+            self.vx = -self.vx
+        elif self.x <= self.r and self.vx < 0:
+            self.x = self.r
+            self.vx = -self.vx
+        elif self.y >= HEIGHT - self.r:
+            self.y = HEIGHT - self.r
+            self.vy = - self.vy
+            self.vx = self.vx
+        elif self.y <= self.r:
+            self.y = self.r
+            self.vy = -self.vy
 
 
 pygame.init()
@@ -189,6 +207,7 @@ while not finished:
         b.draw()
     pygame.display.update()
 
+    target.move()
 
     clock.tick(FPS)
     for event in pygame.event.get():
