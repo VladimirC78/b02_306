@@ -79,26 +79,7 @@ class Fireball(Ball):
         self.x += self.vx
         self.y -= self.vy
 
-        if self.x >= WIDTH - self.r and self.vx > 0:
-            self.x = WIDTH - self.r
-            self.vx = -self.vx * 0.5
-        elif self.x <= self.r and self.vx < 0:
-            self.x = self.r
-            self.vx = -self.vx * 0.5
-        elif self.y >= HEIGHT - self.r:
-            self.y = HEIGHT - self.r
-            self.vy = - self.vy * 0.5
-            self.vx = self.vx * 0.5
-        elif self.y <= self.r and self.vy > 0:
-            self.y = self.r
-            self.vy = -self.vy * 0.5
-            self.vx = self.vx * 0.5
-        if abs(self.vy) <= 5 and self.y > HEIGHT - 2*self.r:
-            self.vy = 0
-
-        if self.vx == 0 or self.vy == 0:
-            self.resting_timer += 1
-        if self.resting_timer > 0.3 * FPS:
+        if self.x >= WIDTH:
             balls.remove(self)
 
 # class FragGrenade(Ball):
