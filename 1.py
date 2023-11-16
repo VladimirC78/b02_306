@@ -79,12 +79,6 @@ class Ball:
             self.r
         )
 
-    def nearby(self, obj):
-        if (self.x - obj.x) ** 2 + (self.y - obj.y) ** 2 <= ((self.r + obj.r) ** 2) * 5:
-            return True
-        else:
-            return False
-
     def hittest(self, obj):
         """Функция проверяет сталкивалкивается ли данный обьект с целью, описываемой в обьекте obj.
 
@@ -195,15 +189,10 @@ class Target:
             self.y = self.r
             self.vy = -self.vy
 
-    def dodge(self, obj):
-        if (obj.vx - self.vx) > 0:
-            self.vy = -abs(obj.vy)/obj.vy * self.vy
-            self.vx *= 1.2
-        if (obj.vy - self.vy) > 0:
-            self.vx = -abs(obj.vx)/obj.vx * self.vx
-            self.vy *= 1.2
-        # self.vx = choice(range(-10, 10))
-        # self.vy = choice(range(-10, 10))
+    def randomization(self):
+        self.vx = choice(range(-10, 10))
+        self.vy = choice(range(-10, 10))
+        self.timer = 55 * (self.n - 1)
 
 
 pygame.init()
@@ -242,12 +231,11 @@ while not finished:
             midscore += 1
         elif event.type == pygame.MOUSEBUTTONUP:
             gun.fire2_end(event)
+            target.randomization()
         elif event.type == pygame.MOUSEMOTION:
             gun.targetting(event)
 
     for b in balls:
-        if b.nearby(target):
-            target.dodge(b)
         b.move()
         if b.hittest(target) and target.live:
             target.live = False
