@@ -3,11 +3,11 @@ from random import choice
 
 import pygame
 
-
 FPS = 30
 points = 0
 midscore = 0
-
+angle0 = 0
+flag = 'classic'
 
 RED = 0xFF0000
 BLUE = 0x0000FF
@@ -26,12 +26,6 @@ HEIGHT = 600
 
 class Ball:
     def __init__(self, screen: pygame.Surface, x=40, y=450):
-        """ Конструктор класса ball
-
-        Args:
-        x - начальное положение мяча по горизонтали
-        y - начальное положение мяча по вертикали
-        """
         self.screen = screen
         self.x = x
         self.y = y
@@ -43,12 +37,6 @@ class Ball:
         self.resting_timer = 0
 
     def move(self):
-        """Переместить мяч по прошествии единицы времени.
-
-        Метод описывает перемещение мяча за один кадр перерисовки. То есть, обновляет значения
-        self.x и self.y с учетом скоростей self.vx и self.vy, силы гравитации, действующей на мяч,
-        и стен по краям окна (размер окна 800х600).
-        """
         self.vy -= 1.2
         self.x += self.vx
         self.y -= self.vy
@@ -80,18 +68,43 @@ class Ball:
         )
 
     def hittest(self, obj):
-        """Функция проверяет сталкивалкивается ли данный обьект с целью, описываемой в обьекте obj.
-
-        Args:
-            obj: Обьект, с которым проверяется столкновение.
-        Returns:
-            Возвращает True в случае столкновения мяча и цели. В противном случае возвращает False.
-        """
-
-        if (self.x - obj.x)**2 + (self.y - obj.y)**2 <= (self.r + obj.r)**2:
+        if (self.x - obj.x) ** 2 + (self.y - obj.y) ** 2 <= (self.r + obj.r) ** 2:
             return True
         else:
             return False
+
+
+class Fireball(Ball):
+    def move(self):
+        self.x += self.vx
+        self.y -= self.vy
+
+        if self.x >= WIDTH - self.r and self.vx > 0:
+            self.x = WIDTH - self.r
+            self.vx = -self.vx * 0.5
+        elif self.x <= self.r and self.vx < 0:
+            self.x = self.r
+            self.vx = -self.vx * 0.5
+        elif self.y >= HEIGHT - self.r:
+            self.y = HEIGHT - self.r
+            self.vy = - self.vy * 0.5
+            self.vx = self.vx * 0.5
+        elif self.y <= self.r and self.vy > 0:
+            self.y = self.r
+            self.vy = -self.vy * 0.5
+            self.vx = self.vx * 0.5
+        if abs(self.vy) <= 5 and self.y > HEIGHT - 2*self.r:
+            self.vy = 0
+
+        if self.vx == 0 or self.vy == 0:
+            self.resting_timer += 1
+        if self.resting_timer > 0.3 * FPS:
+            balls.remove(self)
+
+# class FragGrenade(Ball):
+#     def explode(self):
+#
+#         balls.remove(self)
 
 
 class Gun:
@@ -115,9 +128,13 @@ class Gun:
         """
         global balls, bullet
         bullet += 1
-        new_ball = Ball(self.screen)
+        if flag == 'classic':
+            new_ball = Ball(self.screen)
+        elif flag == 'fb':
+            new_ball = Fireball(self.screen)
         new_ball.r += 5
-        self.an = math.atan2((event.pos[1]-new_ball.y), (event.pos[0]-new_ball.x))
+        self.an = math.atan2((event.pos[1] - new_ball.y), (event.pos[0] - new_ball.x))
+        angle0 = self.an
         new_ball.vx = self.f2_power * math.cos(self.an)
         new_ball.vy = - self.f2_power * math.sin(self.an)
         balls.append(new_ball)
@@ -127,14 +144,15 @@ class Gun:
     def targetting(self, event):
         """Прицеливание. Зависит от положения мыши."""
         if event:
-            self.an = math.atan((event.pos[1]-450) / (event.pos[0]-20))
+            self.an = math.atan((event.pos[1] - 450) / (event.pos[0] - 20))
         if self.f2_on:
             self.color = RED
         else:
             self.color = GREY
 
     def draw(self):
-        pygame.draw.line(self.screen, self.color, (self.x, self.y), (self.x + (self.f2_power + 10)*math.cos(self.an), self.y + (self.f2_power + 10)*math.sin(self.an)), 10)
+        pygame.draw.line(self.screen, self.color, (self.x, self.y), (
+        self.x + (self.f2_power + 10) * math.cos(self.an), self.y + (self.f2_power + 10) * math.sin(self.an)), 10)
 
     def power_up(self):
         if self.f2_on:
@@ -234,6 +252,13 @@ while not finished:
             target.randomization()
         elif event.type == pygame.MOUSEMOTION:
             gun.targetting(event)
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_f:
+                flag = 'fb'
+            if event.key == pygame.K_c:
+                flag = 'classic'
+            if event.key == pygame.K_g:
+                flag = 'frag'
 
     for b in balls:
         b.move()
@@ -243,6 +268,5 @@ while not finished:
             target.new_target()
             midscore = 0
     gun.power_up()
-
 
 pygame.quit()
