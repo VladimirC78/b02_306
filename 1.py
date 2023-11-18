@@ -25,7 +25,7 @@ HEIGHT = 600
 
 
 class Ball:
-    def __init__(self, screen: pygame.Surface, x=40, y=450):
+    def __init__(self, screen: pygame.Surface, x, y):
         self.screen = screen
         self.x = x
         self.y = y
@@ -99,6 +99,7 @@ class Gun:
         self.color = GREY
         self.x = 40
         self.y = 450
+        self.vx = 0
 
     def fire2_start(self, event):
         self.f2_on = 1
@@ -112,11 +113,11 @@ class Gun:
         global balls, bullet
         bullet += 1
         if flag == 'classic':
-            new_ball = Ball(self.screen)
+            new_ball = Ball(self.screen, gun.x, gun.y)
         elif flag == 'fb':
-            new_ball = Fireball(self.screen)
+            new_ball = Fireball(self.screen, gun.x, gun.y)
         elif flag == 'missile':
-            new_ball = Missile(self.screen)
+            new_ball = Missile(self.screen, gun.x, gun.y)
         new_ball.r += 5
         self.an = math.atan2((event.pos[1] - new_ball.y), (event.pos[0] - new_ball.x))
         angle0 = self.an
@@ -146,6 +147,9 @@ class Gun:
             self.color = RED
         else:
             self.color = GREY
+
+    def move(self):
+        self.x += self.vx
 
 
 class Target:
@@ -252,6 +256,7 @@ RestingTarget(screen)
 while not finished:
     screen.fill(WHITE)
     gun.draw()
+    gun.move()
 
     score_text = font.render("Очки: " + str(points), True, BLACK)
     screen.blit(score_text, (10, 10))
@@ -289,6 +294,12 @@ while not finished:
                 flag = 'classic'
             if event.key == pygame.K_m:
                 flag = 'missile'
+            if event.key == pygame.K_a:
+                gun.vx = -5
+            if event.key == pygame.K_d:
+                gun.vx = 5
+        elif event.type == pygame.KEYUP:
+            gun.vx = 0
 
     for b in balls:
         b.move()
