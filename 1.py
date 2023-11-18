@@ -71,6 +71,7 @@ class Ball:
 
     def hittest(self, obj):
         if (self.x - obj.x) ** 2 + (self.y - obj.y) ** 2 <= (self.r + obj.r) ** 2:
+            balls.remove(self)
             return True
         else:
             return False
@@ -132,8 +133,8 @@ class Gun:
     def targetting(self, event):
         """Прицеливание. Зависит от положения мыши."""
         if event:
-            if event.pos[0] - 20 > 0 > event.pos[1] - 450:
-                self.an = math.atan((event.pos[1] - 450) / (event.pos[0] - 20))
+            if event.pos[0] - self.x > 0 > event.pos[1] - self.y:
+                self.an = math.atan((event.pos[1] - self.y) / (event.pos[0] - self.x))
         if self.f2_on:
             self.color = RED
         else:
@@ -316,7 +317,6 @@ while not finished:
                     t.new_target()
                     points += 1
                     midscore = 0
-                balls.remove(b)
     gun.power_up()
 
 pygame.quit()
