@@ -82,11 +82,12 @@ class Fireball(Ball):
         if self.x >= WIDTH:
             balls.remove(self)
 
-# class FragGrenade(Ball):
-#     def explode(self):
-#
-#         balls.remove(self)
 
+class Missile(Ball):
+    def move(self):
+        self.angle = math.acos((self.x - target.x)/((self.x - target.x)**2 +(self.y - target.y))**0.5)
+        self.vx = 10 * math.cos(self.angle)
+        self.vy = 10 * math.sin(self.angle)
 
 class Gun:
     def __init__(self, screen):
@@ -113,6 +114,8 @@ class Gun:
             new_ball = Ball(self.screen)
         elif flag == 'fb':
             new_ball = Fireball(self.screen)
+        elif flag == 'missile':
+            new_ball = Missile(self.screen)
         new_ball.r += 5
         self.an = math.atan2((event.pos[1] - new_ball.y), (event.pos[0] - new_ball.x))
         angle0 = self.an
@@ -133,7 +136,7 @@ class Gun:
 
     def draw(self):
         pygame.draw.line(self.screen, self.color, (self.x, self.y), (
-        self.x + (self.f2_power + 10) * math.cos(self.an), self.y + (self.f2_power + 10) * math.sin(self.an)), 10)
+            self.x + (self.f2_power + 10) * math.cos(self.an), self.y + (self.f2_power + 10) * math.sin(self.an)), 10)
 
     def power_up(self):
         if self.f2_on:
@@ -148,6 +151,7 @@ class Target:
     def __init__(self, screen):
         self.screen = screen
         self.new_target()
+        global targets
 
     def new_target(self):
         """ Инициализация новой цели. """
@@ -160,6 +164,7 @@ class Target:
         self.vx = choice(range(-10, 10))
         self.timer = 0
         self.n = 1
+        targets.append(self)
 
     def draw(self):
         pygame.draw.circle(self.screen, self.color, (self.x, self.y), self.r)
@@ -193,21 +198,49 @@ class Target:
         self.vy = choice(range(-10, 10))
         self.timer = 55 * (self.n - 1)
 
+    def respawn(self):
+        self.new_target()
+
+class RestingTarget(Target):
+    def __init__(self, screen):
+        self.screen = screen
+        self.new_target()
+        global targets
+    def new_target(self):
+        self.live = True
+        self.x = choice(range(300, 750))
+        self.y = choice(range(200, 550))
+        self.r = choice(range(5, 40))
+        self.color = GREEN
+        self.vy = 0
+        self.vx = 0
+        self.timer = 0
+        self.n = 1
+        targets.append(self)
+    def move(self):
+        pass
+    def randomization(self):
+        pass
 
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 bullet = 0
 balls = []
+targets = []
 font = pygame.font.Font(None, 36)
 clock = pygame.time.Clock()
 gun = Gun(screen)
-target = Target(screen)
 finished = False
+
+Target(screen)
+RestingTarget(screen)
+RestingTarget(screen)
+
+print(targets)
 
 while not finished:
     screen.fill(WHITE)
     gun.draw()
-    target.draw()
 
     score_text = font.render("Очки: " + str(points), True, BLACK)
     screen.blit(score_text, (10, 10))
@@ -217,9 +250,13 @@ while not finished:
 
     for b in balls:
         b.draw()
+
+    for t in targets:
+        t.draw()
+        t.move()
+
     pygame.display.update()
 
-    target.move()
 
     clock.tick(FPS)
     for event in pygame.event.get():
@@ -230,7 +267,8 @@ while not finished:
             midscore += 1
         elif event.type == pygame.MOUSEBUTTONUP:
             gun.fire2_end(event)
-            target.randomization()
+            for t in targets:
+                t.randomization()
         elif event.type == pygame.MOUSEMOTION:
             gun.targetting(event)
         elif event.type == pygame.KEYDOWN:
@@ -238,16 +276,19 @@ while not finished:
                 flag = 'fb'
             if event.key == pygame.K_c:
                 flag = 'classic'
-            if event.key == pygame.K_g:
-                flag = 'frag'
+            if event.key == pygame.K_m:
+                flag = 'missile'
 
     for b in balls:
         b.move()
-        if b.hittest(target) and target.live:
-            target.live = False
-            points += 1
-            target.new_target()
-            midscore = 0
+        for t in targets:
+            if b.hittest(t) and t.live:
+                t.live = False
+                targets.remove(t)
+                t.new_target()
+                points += 1
+                midscore = 0
+                balls.remove(b)
     gun.power_up()
 
 pygame.quit()
