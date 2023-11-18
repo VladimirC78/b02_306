@@ -85,9 +85,10 @@ class Fireball(Ball):
 
 class Missile(Ball):
     def move(self):
-        self.angle = math.acos((self.x - target.x)/((self.x - target.x)**2 +(self.y - target.y))**0.5)
+        self.angle = math.acos((self.x - target.x) / ((self.x - target.x) ** 2 + (self.y - target.y)) ** 0.5)
         self.vx = 10 * math.cos(self.angle)
         self.vy = 10 * math.sin(self.angle)
+
 
 class Gun:
     def __init__(self, screen):
@@ -164,9 +165,16 @@ class Target:
         self.vx = choice(range(-10, 10))
         self.timer = 0
         self.n = 1
+        self.hp = 1
+        self.color = RED
         targets.append(self)
 
     def draw(self):
+        if self.hp == 1:
+            self.color = RED
+        elif self.hp == 2:
+            self.color = GREEN
+
         pygame.draw.circle(self.screen, self.color, (self.x, self.y), self.r)
 
     def move(self):
@@ -198,14 +206,13 @@ class Target:
         self.vy = choice(range(-10, 10))
         self.timer = 55 * (self.n - 1)
 
-    def respawn(self):
-        self.new_target()
 
 class RestingTarget(Target):
     def __init__(self, screen):
         self.screen = screen
         self.new_target()
         global targets
+
     def new_target(self):
         self.live = True
         self.x = choice(range(300, 750))
@@ -216,13 +223,19 @@ class RestingTarget(Target):
         self.vx = 0
         self.timer = 0
         self.n = 1
+        self.hp = 2
+        self.color = GREEN
         targets.append(self)
+
     def move(self):
         pass
+
     def randomization(self):
         pass
 
+
 pygame.init()
+
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 bullet = 0
 balls = []
@@ -235,8 +248,6 @@ finished = False
 Target(screen)
 RestingTarget(screen)
 RestingTarget(screen)
-
-print(targets)
 
 while not finished:
     screen.fill(WHITE)
@@ -257,8 +268,8 @@ while not finished:
 
     pygame.display.update()
 
-
     clock.tick(FPS)
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             finished = True
@@ -283,11 +294,13 @@ while not finished:
         b.move()
         for t in targets:
             if b.hittest(t) and t.live:
-                t.live = False
-                targets.remove(t)
-                t.new_target()
-                points += 1
-                midscore = 0
+                t.hp -= 1
+                if t.hp == 0:
+                    t.live = False
+                    targets.remove(t)
+                    t.new_target()
+                    points += 1
+                    midscore = 0
                 balls.remove(b)
     gun.power_up()
 
