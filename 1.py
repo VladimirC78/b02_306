@@ -7,6 +7,7 @@ FPS = 30
 points = 0
 midscore = 0
 flag = 'classic'
+planes = []
 
 RED = 0xFF0000
 BLUE = 0x0000FF
@@ -61,12 +62,8 @@ class Ball:
             balls.remove(self)
 
     def draw(self):
-        pygame.draw.circle(
-            self.screen,
-            self.color,
-            (self.x, self.y),
-            self.r
-        )
+        pygame.draw.circle(self.screen, BLACK, (self.x, self.y), self.r + 2)
+        pygame.draw.circle(self.screen, self.color, (self.x, self.y), self.r)
 
     def hittest(self, obj):
         if (self.x - obj.x) ** 2 + (self.y - obj.y) ** 2 <= (self.r + obj.r) ** 2:
@@ -122,7 +119,6 @@ class Gun:
             new_ball = Fireball(self.screen, gun.x, gun.y)
         # elif flag == 'missile':
         #     new_ball = Missile(self.screen, gun.x, gun.y)
-        new_ball.r += 5
         if event.pos[1] < self.y:
             self.an = math.atan((event.pos[0] - self.x) / (event.pos[1] - self.y))
         new_ball.vx = - self.f2_power * math.sin(self.an)
@@ -218,6 +214,7 @@ class Target:
         elif self.hp == 2:
             self.color = GREEN
 
+        pygame.draw.circle(self.screen, BLACK, (self.x, self.y), self.r + 2)
         pygame.draw.circle(self.screen, self.color, (self.x, self.y), self.r)
 
     def move(self):
@@ -278,15 +275,116 @@ class RestingTarget(Target):
 
 class Bomber:
     def __init__(self, screen):
-        self.x = 10
-        self.y = 10
-        self.vx = 10
+
+        self.x = 0
+        self.y = choice(range(200, 400))
+        self.vx = choice(range(3, 8))
         self.screen = screen
         self.timer = 0
         self.color = GREY
+        self.timer = 0
+        self.forward = True
+        planes.append(self)
+
+    def drop_bomb(self):
+        return Bomb(self.screen, self.x, self.y, self.vx)
+
+    def move(self):
+        self.x += self.vx
+        if self.x >= WIDTH - 80:
+            self.x = WIDTH - 80
+            self.vx = -self.vx
+            self.forward = False
+
+        if self.x <= 80:
+            self.x = 80
+            self.vx = -self.vx
+            self.forward = True
 
     def draw(self):
-        pygame.draw.rect(self.screen, self.color)
+
+        if self.forward:
+            xc = self.x + 70
+            yc = self.y
+            rc = 10
+            x1 = self.x
+            y1 = self.y - 20
+            x2 = self.x + 20
+            y2 = self.y - 10
+            x3 = self.x + 20
+            y3 = self.y + 10
+            x4 = self.x
+            y4 = self.y + 20
+
+            x5 = self.x + 20
+            y5 = self.y - 10
+
+            x6 = self.x + 35
+            y6 = self.y - 10
+            x7 = x6
+            y7 = self.y - 45
+            x8 = x7 + 15
+            y8 = y7
+            x9 = x8 + 5
+            y9 = self.y - 10
+
+            x10 = x6
+            y10 = self.y + 10
+            x11 = x10
+            y11 = self.y + 45
+            x12 = x11 + 15
+            y12 = y11
+            x13 = x12 + 5
+            y13 = self.y + 10
+        else:
+            xc = self.x - 10
+            yc = self.y
+            rc = 12
+            x1 = self.x - 60
+            y1 = self.y - 10
+            x2 = x1 - 20
+            y2 = self.y - 20
+            x3 = x2
+            y3 = self.y + 20
+            x4 = x1
+            y4 = self.y + 10
+
+            x5 = self.x + 10
+            y5 = self.x - 10
+
+            x6 = self.x + 25
+            y6 = self.y - 10
+            x7 = self.x + 30
+            y7 = self.y - 45
+            x8 = x7 + 15
+            y8 = y7
+            x9 = x8
+            y9 = y6
+
+            x10 = x6
+            y10 = self.y + 10
+            x11 = x7
+            y11 = self.y + 45
+            x12 = x8
+            y12 = y11
+            x13 = x9
+            y13 = y10
+
+        pygame.draw.polygon(self.screen, self.color, [[x1, y1], [x2, y2], [x3, y3], [x4, y4]])
+        pygame.draw.rect(self.screen, self.color, (x5, y5, 50, 20))
+        pygame.draw.circle(self.screen, self.color, (xc, yc), rc)
+        pygame.draw.polygon(self.screen, self.color, [[x6, y6], [x7, y7], [x8, y8], [x9, y9]])
+        pygame.draw.polygon(self.screen, self.color, [[x10, y10], [x11, y11], [x12, y12], [x13, y13]])
+
+class Bomb(Ball):
+    def __init__(self, screen, x, y, v):
+        self.screen = screen
+        self.x = x
+        self.y = y
+        self.vx = v
+        self.vy = 0
+        self.r = choice(range(5, 12))
+
 
 pygame.init()
 
@@ -302,6 +400,8 @@ finished = False
 Target(screen)
 RestingTarget(screen)
 RestingTarget(screen)
+time = 0
+counter = 0
 
 while not finished:
     screen.fill(WHITE)
@@ -314,12 +414,22 @@ while not finished:
     midscore_text = font.render("Количество попыток: " + str(midscore), True, BLACK)
     screen.blit(midscore_text, (270, 525))
 
+    if time % 200 == 0 and counter <= 3:
+        Bomber(screen)
+        counter += 1
+
     for b in balls:
         b.draw()
+
+    time += 1
 
     for t in targets:
         t.draw()
         t.move()
+
+    for plane in planes:
+        plane.draw()
+        plane.move()
 
     pygame.display.update()
 
