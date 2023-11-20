@@ -6,7 +6,6 @@ import pygame
 FPS = 30
 points = 0
 midscore = 0
-angle0 = 0
 flag = 'classic'
 
 RED = 0xFF0000
@@ -86,11 +85,11 @@ class Fireball(Ball):
             balls.remove(self)
 
 
-class Missile(Ball):
-    def move(self):
-        self.angle = math.acos((self.x - target.x) / ((self.x - target.x) ** 2 + (self.y - target.y)) ** 0.5)
-        self.vx = 10 * math.cos(self.angle)
-        self.vy = 10 * math.sin(self.angle)
+# class Missile(Ball):
+#     def move(self):
+#         self.angle = math.acos((self.x - target.x) / ((self.x - target.x) ** 2 + (self.y - target.y)) ** 0.5)
+#         self.vx = 10 * math.cos(self.angle)
+#         self.vy = 10 * math.sin(self.angle)
 
 
 class Gun:
@@ -103,6 +102,8 @@ class Gun:
         self.x = 40
         self.y = 450
         self.vx = 0
+        self.moving = False
+        self.hp = 5
 
     def fire2_start(self, event):
         self.f2_on = 1
@@ -119,31 +120,64 @@ class Gun:
             new_ball = Ball(self.screen, gun.x, gun.y)
         elif flag == 'fb':
             new_ball = Fireball(self.screen, gun.x, gun.y)
-        elif flag == 'missile':
-            new_ball = Missile(self.screen, gun.x, gun.y)
+        # elif flag == 'missile':
+        #     new_ball = Missile(self.screen, gun.x, gun.y)
         new_ball.r += 5
-        self.an = math.atan2((event.pos[1] - new_ball.y), (event.pos[0] - new_ball.x))
-        angle0 = self.an
-        new_ball.vx = self.f2_power * math.cos(self.an)
-        new_ball.vy = - self.f2_power * math.sin(self.an)
+        if event.pos[1] < self.y:
+            self.an = math.atan((event.pos[0] - self.x) / (event.pos[1] - self.y))
+        new_ball.vx = - self.f2_power * math.sin(self.an)
+        new_ball.vy = self.f2_power * math.cos(self.an)
         balls.append(new_ball)
         self.f2_on = 0
         self.f2_power = 10
 
     def targetting(self, event):
-        """Прицеливание. Зависит от положения мыши."""
-        if event:
-            if event.pos[0] - self.x > 0 > event.pos[1] - self.y:
-                self.an = math.atan((event.pos[1] - self.y) / (event.pos[0] - self.x))
+        if event and (event.pos[1] < self.y):
+            self.an = math.atan((event.pos[0]-self.x) / (event.pos[1]-self.y))
         if self.f2_on:
             self.color = RED
         else:
             self.color = GREY
 
     def draw(self):
-        pygame.draw.line(self.screen, self.color, (self.x, self.y), (
-            self.x + (self.f2_power + 10) * math.cos(self.an), self.y + (self.f2_power + 10) * math.sin(self.an)), 10)
-        pygame.draw.rect(self.screen, GREY, (self.x - 10, self.y, 30, 10))
+        y11 = self.y + 5 * math.sin(self.an)
+        x11 = self.x - 5 * math.cos(self.an)
+        y12 = self.y - 5 * math.sin(self.an)
+        x12 = self.x + 5 * math.cos(self.an)
+
+        y21 = self.y - (self.f2_power + 20) * math.cos(self.an) - 5 * math.sin(self.an)
+        x21 = self.x - (self.f2_power + 20) * math.sin(self.an) + 5 * math.cos(self.an)
+        y22 = self.y - (self.f2_power + 20) * math.cos(self.an) + 5 * math.sin(self.an)
+        x22 = self.x - (self.f2_power + 20) * math.sin(self.an) - 5 * math.cos(self.an)
+        pygame.draw.polygon(self.screen, self.color, [[x11, y11], [x12, y12], [x21, y21], [x22, y22]])
+        pygame.draw.circle(self.screen, BLACK, [self.x, self.y], 22)
+        pygame.draw.circle(self.screen, [29, 150, 20], [self.x, self.y], 20)
+        x1 = self.x - 32
+        y1 = self.y
+        x2 = self.x - 32
+        y2 = self.y + 10
+        x3 = self.x - 20
+        y3 = self.y + 20
+        x4 = self.x + 32
+        y4 = self.y
+        x5 = self.x + 32
+        y5 = self.y + 10
+        x6 = self.x + 20
+        y6 = self.y + 20
+
+        pygame.draw.polygon(self.screen, BLACK, [[x1 - 2, y1 - 2], [x2 - 2, y2], [x3 - 2, y3], [x6 + 2, y6], [x5 + 2, y5], [x4 + 2, y4 - 2]])
+        pygame.draw.polygon(self.screen, [29, 100, 20], [[x1, y1], [x2, y2], [x3, y3], [x6, y6], [x5, y5], [x4, y4]])
+
+        pygame.draw.circle(self.screen, BLACK, (x1, y6), 8)
+        pygame.draw.circle(self.screen, BROWN, (x1, y6), 6)
+        pygame.draw.circle(self.screen, BLACK, (x4, y6), 8)
+        pygame.draw.circle(self.screen, BROWN, (x4, y6), 6)
+        pygame.draw.circle(self.screen, BLACK, (x1 + 16, y6), 8)
+        pygame.draw.circle(self.screen, BROWN, (x1 + 16, y6), 6)
+        pygame.draw.circle(self.screen, BLACK, (x1 + 32, y6), 8)
+        pygame.draw.circle(self.screen, BROWN, (x1 + 32, y6), 6)
+        pygame.draw.circle(self.screen, BLACK, (x1 + 48, y6), 8)
+        pygame.draw.circle(self.screen, BROWN, (x1 + 48, y6), 6)
 
     def power_up(self):
         if self.f2_on:
@@ -242,6 +276,17 @@ class RestingTarget(Target):
     def randomization(self):
         pass
 
+class Bomber:
+    def __init__(self, screen):
+        self.x = 10
+        self.y = 10
+        self.vx = 10
+        self.screen = screen
+        self.timer = 0
+        self.color = GREY
+
+    def draw(self):
+        pygame.draw.rect(self.screen, self.color)
 
 pygame.init()
 
@@ -303,8 +348,10 @@ while not finished:
                 gun.vx = -5
             if event.key == pygame.K_d:
                 gun.vx = 5
+                gun.moving = True
         elif event.type == pygame.KEYUP:
             gun.vx = 0
+            gun.moving = False
 
     for b in balls:
         b.move()
