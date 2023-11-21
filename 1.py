@@ -30,6 +30,7 @@ points = 0
 midscore = 0
 flag = 'classic'
 planes = []
+bombs = []
 
 RED = 0xFF0000
 BLUE = 0x0000FF
@@ -116,9 +117,13 @@ class Ball:
             hitwings = hitwings or lwing21 <= self.r or lwing22 <= self.r or lwing23 <= self.r
 
             if hittail or hitbody or hitglass or hitwings:
+                balls.remove(self)
                 return True
             else:
                 return False
+
+        elif isinstance(obj, Gun):
+            pass
 
 
 class Fireball(Ball):
@@ -129,12 +134,6 @@ class Fireball(Ball):
         if self.x >= WIDTH:
             balls.remove(self)
 
-
-# class Missile(Ball):
-#     def move(self):
-#         self.angle = math.acos((self.x - target.x) / ((self.x - target.x) ** 2 + (self.y - target.y)) ** 0.5)
-#         self.vx = 10 * math.cos(self.angle)
-#         self.vy = 10 * math.sin(self.angle)
 
 
 class Gun:
@@ -148,7 +147,7 @@ class Gun:
         self.y = 450
         self.vx = 0
         self.moving = False
-        self.hp = 5
+        self.hp = 3
 
     def fire2_start(self, event):
         self.f2_on = 1
@@ -165,8 +164,6 @@ class Gun:
             new_ball = Ball(self.screen, gun.x, gun.y)
         elif flag == 'fb':
             new_ball = Fireball(self.screen, gun.x, gun.y)
-        # elif flag == 'missile':
-        #     new_ball = Missile(self.screen, gun.x, gun.y)
         if event.pos[1] < self.y:
             self.an = math.atan((event.pos[0] - self.x) / (event.pos[1] - self.y))
         new_ball.vx = - self.f2_power * math.sin(self.an)
@@ -184,6 +181,7 @@ class Gun:
             self.color = GREY
 
     def draw(self):
+
         y11 = self.y + 5 * math.sin(self.an)
         x11 = self.x - 5 * math.cos(self.an)
         y12 = self.y - 5 * math.sin(self.an)
@@ -437,6 +435,16 @@ class Bomb(Ball):
         self.vx = v
         self.vy = 0
         self.r = choice(range(5, 12))
+        self.color = BLACK
+        bombs.append(self)
+
+    def move(self):
+        self.x += self.vx
+        self.vy += 1.2
+        self.y += self.vy
+
+        if self.y >= HEIGHT - self.r:
+            bombs.remove(self)
 
 
 pygame.init()
@@ -474,6 +482,12 @@ while not finished:
     for b in balls:
         b.draw()
 
+    for bom in bombs:
+        bom.move()
+        bom.draw()
+        if bom.hittest(gun):
+            gun.hp -= 1
+
     time += 1
 
     for t in targets:
@@ -483,6 +497,8 @@ while not finished:
     for plane in planes:
         plane.draw()
         plane.move()
+        if time % 50 == 0:
+            plane.drop_bomb()
 
     pygame.display.update()
 
@@ -530,6 +546,7 @@ while not finished:
         for plane in planes:
             if b.hittest(plane):
                 planes.remove(plane)
+                counter -= 1
                 points += 1
     gun.power_up()
 
