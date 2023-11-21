@@ -277,7 +277,7 @@ class Bomber:
     def __init__(self, screen):
 
         self.x = 0
-        self.y = choice(range(200, 400))
+        self.y = choice(range(100, 300))
         self.vx = choice(range(3, 8))
         self.screen = screen
         self.timer = 0
@@ -296,8 +296,8 @@ class Bomber:
             self.vx = -self.vx
             self.forward = False
 
-        if self.x <= 80:
-            self.x = 80
+        if self.x <= 0:
+            self.x = 0
             self.vx = -self.vx
             self.forward = True
 
@@ -336,21 +336,22 @@ class Bomber:
             y12 = y11
             x13 = x12 + 5
             y13 = self.y + 10
+
         else:
-            xc = self.x - 10
+            xc = self.x + 10
             yc = self.y
-            rc = 12
-            x1 = self.x - 60
+            rc = 10
+            x1 = self.x + 60
             y1 = self.y - 10
-            x2 = x1 - 20
+            x2 = self.x + 80
             y2 = self.y - 20
-            x3 = x2
+            x3 = self.x + 80
             y3 = self.y + 20
-            x4 = x1
+            x4 = self.x + 60
             y4 = self.y + 10
 
             x5 = self.x + 10
-            y5 = self.x - 10
+            y5 = self.y - 10
 
             x6 = self.x + 25
             y6 = self.y - 10
@@ -370,11 +371,12 @@ class Bomber:
             x13 = x9
             y13 = y10
 
-        pygame.draw.polygon(self.screen, self.color, [[x1, y1], [x2, y2], [x3, y3], [x4, y4]])
-        pygame.draw.rect(self.screen, self.color, (x5, y5, 50, 20))
-        pygame.draw.circle(self.screen, self.color, (xc, yc), rc)
-        pygame.draw.polygon(self.screen, self.color, [[x6, y6], [x7, y7], [x8, y8], [x9, y9]])
-        pygame.draw.polygon(self.screen, self.color, [[x10, y10], [x11, y11], [x12, y12], [x13, y13]])
+        pygame.draw.polygon(self.screen, (139, 0, 0), [[x1, y1], [x2, y2], [x3, y3], [x4, y4]])
+        pygame.draw.circle(self.screen, CYAN, (xc, yc), rc)
+        pygame.draw.rect(self.screen, (139, 0, 0), (x5, y5, 50, 20))
+        pygame.draw.polygon(self.screen, (139, 0, 0), [[x6, y6], [x7, y7], [x8, y8], [x9, y9]])
+        pygame.draw.polygon(self.screen, (139, 0, 0), [[x10, y10], [x11, y11], [x12, y12], [x13, y13]])
+
 
 class Bomb(Ball):
     def __init__(self, screen, x, y, v):
@@ -414,7 +416,7 @@ while not finished:
     midscore_text = font.render("Количество попыток: " + str(midscore), True, BLACK)
     screen.blit(midscore_text, (270, 525))
 
-    if time % 200 == 0 and counter <= 3:
+    if time % 200 == 0 and counter < 3:
         Bomber(screen)
         counter += 1
 
