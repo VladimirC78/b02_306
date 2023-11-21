@@ -1,6 +1,7 @@
 import math
 from random import choice
 import numpy as np
+import pygame
 
 
 def segment_distance(x, y, x1, y1, x2, y2):
@@ -23,14 +24,14 @@ def segment_distance(x, y, x1, y1, x2, y2):
             return abs(x - x1)
 
 
-import pygame
-
 FPS = 30
 points = 0
 midscore = 0
 flag = 'classic'
 planes = []
 bombs = []
+badguns = []
+badballs = []
 
 RED = 0xFF0000
 BLUE = 0x0000FF
@@ -82,7 +83,10 @@ class Ball:
         if self.vx == 0 or self.vy == 0:
             self.resting_timer += 1
         if self.resting_timer > 0.3 * FPS:
-            balls.remove(self)
+            if self in balls:
+                balls.remove(self)
+            elif self in badballs:
+                badballs.remove(self)
 
     def draw(self):
         pygame.draw.circle(self.screen, BLACK, (self.x, self.y), self.r + 2)
@@ -91,7 +95,8 @@ class Ball:
     def hittest(self, obj):
         if isinstance(obj, Target):
             if (self.x - obj.x) ** 2 + (self.y - obj.y) ** 2 <= (self.r + obj.r) ** 2:
-                balls.remove(self)
+                if self in balls:
+                    balls.remove(self)
                 return True
             else:
                 return False
@@ -131,6 +136,12 @@ class Ball:
             hithead = (self.x - obj.x) ** 2 + (self.y - obj.y) ** 2 <= (self.r + 22) ** 2
 
             if hittank or hithead:
+                if self in badballs:
+                    badballs.remove(self)
+                elif self in balls:
+                    balls.remove(self)
+                elif self in bombs:
+                    bombs.remove(self)
                 return True
             else:
                 return False
@@ -146,18 +157,19 @@ class Fireball(Ball):
 
 
 class Gun:
-    def __init__(self, screen):
+    def __init__(self, screen, x, y):
         self.screen = screen
         self.f2_power = 10
         self.f2_on = 0
         self.an = 1
-        self.x = 40
-        self.y = 450
+        self.x = x
+        self.y = y
         self.vx = 0
         self.moving = False
         self.hp = 3
         self.upcolor = [29, 150, 20]
         self.downcolor = [29, 100, 20]
+        self.timer = 0
 
     def fire2_start(self, event):
         self.f2_on = 1
@@ -250,7 +262,49 @@ class Gun:
 
     def move(self):
         self.x += self.vx
+        if self.x >= WIDTH - 34:
+            self.x = WIDTH - 34
+            self.vx = 0
+        if self.x <= 34:
+            self.x = 34
+            self.vx = 0
 
+
+class BadGun(Gun):
+    def __init__(self, screen, x, y):
+        self.screen = screen
+        self.f2_power = 10
+        self.x = x
+        self.y = y
+        self.vx = choice(range(-10, 10))
+        self.angle = 0
+        self.hp = 1
+        self.f2_on = 0
+        self.color = GREY
+        self.timer = 0
+        self.an = 0
+        self.firing = 0
+
+    def targetting(self):
+        if self.f2_on:
+            self.color = RED
+        else:
+            self.color = GREY
+
+    def fire2_start(self):
+        if self.x > gun.x:
+            self.an = choice(range(0, 156)) / 100
+        else:
+            self.an = -choice(range(0, 156))/100
+        self.f2_on = 1
+
+    def fire2_end(self):
+        new_ball = Ball(self.screen, self.x, self.y)
+        badballs.append(new_ball)
+        new_ball.vx = - self.f2_power * math.sin(self.an)
+        new_ball.vy = self.f2_power * math.cos(self.an)
+        self.f2_on = 0
+        self.f2_power = 10
 
 class Target:
     def __init__(self, screen):
@@ -472,7 +526,7 @@ balls = []
 targets = []
 font = pygame.font.Font(None, 36)
 clock = pygame.time.Clock()
-gun = Gun(screen)
+gun = Gun(screen, 40, 450)
 finished = False
 
 Target(screen)
@@ -492,6 +546,27 @@ while not finished:
     midscore_text = font.render("Количество попыток: " + str(midscore), True, BLACK)
     screen.blit(midscore_text, (270, 525))
 
+    if time % 400 == 0 and len(badguns) < 3:
+        badguns.append(BadGun(screen, choice(range(100, 600)), choice(range(100, 300))))
+
+    for bad in badguns:
+        bad.draw()
+        bad.timer += 1
+        bad.power_up()
+        bad.move()
+        if bad.timer % 80 == 0:
+            bad.vx = choice(range(-10, 10))
+
+        if bad.timer % 100 == 0:
+            firing = 0
+            period = choice(range(10, 50))
+            bad.fire2_start()
+        if bad.f2_on:
+            bad.firing += 1
+            if bad.firing >= period:
+                bad.fire2_end()
+                bad.firing = 0
+
     if time % 200 == 0 and counter < 3:
         Bomber(screen)
         counter += 1
@@ -504,8 +579,7 @@ while not finished:
         bom.draw()
         if bom.hittest(gun):
             gun.hp -= 1
-            pygame.draw.circle(screen, RED, (bom.x, bom.y), 20)
-            bombs.remove(bom)
+            pygame.draw.circle(screen, (255, 69, 0), (bom.x, bom.y), 20)
 
     time += 1
 
@@ -518,6 +592,12 @@ while not finished:
         plane.move()
         if time % 40 == 0:
             plane.drop_bomb()
+
+    for bb in badballs:
+        bb.move()
+        bb.draw()
+        if bb.hittest(gun):
+            gun.hp -= 1
 
     pygame.display.update()
 
@@ -571,6 +651,10 @@ while not finished:
                 planes.remove(plane)
                 counter -= 1
                 points += 1
+        for badgun in badguns:
+            if b.hittest(badgun):
+                badgun.hp -= 1
+                badguns.remove(badgun)
     gun.power_up()
 
 pygame.quit()
