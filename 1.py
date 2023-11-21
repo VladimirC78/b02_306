@@ -203,13 +203,16 @@ class Gun:
             self.color = GREY
 
     def draw(self):
-
-        if self.hp == 2:
-            self.upcolor = [255, 165, 0]
-            self.downcolor = [255, 140, 0]
-        elif self.hp == 1:
-            self.upcolor = RED
-            self.downcolor = [178, 34, 34]
+        if isinstance(self, BadGun):
+            self.upcolor = BLACK
+            self.downcolor = BLACK
+        else:
+            if self.hp == 2:
+                self.upcolor = [255, 165, 0]
+                self.downcolor = [255, 140, 0]
+            elif self.hp == 1:
+                self.upcolor = RED
+                self.downcolor = [178, 34, 34]
 
         y11 = self.y + 5 * math.sin(self.an)
         x11 = self.x - 5 * math.cos(self.an)
@@ -251,6 +254,26 @@ class Gun:
         pygame.draw.circle(self.screen, BROWN, (x1 + 32, y6), 6)
         pygame.draw.circle(self.screen, BLACK, (x1 + 48, y6), 8)
         pygame.draw.circle(self.screen, BROWN, (x1 + 48, y6), 6)
+
+        if isinstance(self, BadGun):
+            x0 = self.x - 6
+            y0 = self.y - 5
+            pygame.draw.rect(self.screen, WHITE, (x0 + 3, y0, 6, 1))
+            pygame.draw.rect(self.screen, WHITE, (x0 + 1, y0 + 1, 10, 2))
+            pygame.draw.rect(self.screen, WHITE, (x0, y0 + 3, 12, 5))
+            pygame.draw.rect(self.screen, WHITE, (x0 + 1, y0 + 8, 10, 1))
+            pygame.draw.rect(self.screen, WHITE, (x0 + 2, y0 + 9, 8, 1))
+            pygame.draw.rect(self.screen, WHITE, (x0 + 3, y0 + 10, 6, 3))
+
+            pygame.draw.rect(self.screen, BLACK, (x0 + 4, y0 + 12, 1, 1))
+            pygame.draw.rect(self.screen, BLACK, (x0 + 7, y0 + 12, 1, 1))
+            pygame.draw.rect(self.screen, BLACK, (x0 + 5, y0 + 9, 2, 2))
+            pygame.draw.rect(self.screen, BLACK, (x0 + 2, y0 + 4, 3, 3))
+            pygame.draw.rect(self.screen, BLACK, (x0 + 1, y0 + 5, 1, 2))
+            pygame.draw.rect(self.screen, BLACK, (x0 + 2, y0 + 7, 2, 1))
+            pygame.draw.rect(self.screen, BLACK, (x0 + 8, y0 + 4, 3, 3))
+            pygame.draw.rect(self.screen, BLACK, (x0 + 8, y0 + 7, 2, 1))
+            pygame.draw.rect(self.screen, BLACK, (x0 + 10, y0 + 5, 1, 2))
 
     def power_up(self):
         if self.f2_on:
@@ -546,12 +569,11 @@ while not finished:
     midscore_text = font.render("Количество попыток: " + str(midscore), True, BLACK)
     screen.blit(midscore_text, (270, 525))
 
-    if time % 400 == 0 and len(badguns) < 3:
+    if time % 400 == 0 and len(badguns) < 6:
         badguns.append(BadGun(screen, choice(range(100, 600)), choice(range(100, 300))))
 
     for bad in badguns:
         bad.draw()
-        bad.timer += 1
         bad.power_up()
         bad.move()
         if bad.timer % 80 == 0:
@@ -566,8 +588,9 @@ while not finished:
             if bad.firing >= period:
                 bad.fire2_end()
                 bad.firing = 0
+        bad.timer += 1
 
-    if time % 200 == 0 and counter < 3:
+    if time % 200 == 0 and counter < 5:
         Bomber(screen)
         counter += 1
 
