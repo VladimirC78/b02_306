@@ -105,7 +105,7 @@ class Ball:
             lbody2 = segment_distance(self.x, self.y, obj.x3, obj.y3, obj.x3 + 50, obj.y3)
             hitbody = lbody1 <= self.r or lbody2 <= self.r
 
-            hitglass = (self.x - obj.xc) ** 2 + (self.y - obj.yc) ** 2 <= self.r ** 2
+            hitglass = (self.x - obj.xc) ** 2 + (self.y - obj.yc) ** 2 <= (self.r + 10) ** 2
 
             lwing11 = segment_distance(self.x, self.y, obj.x6, obj.y6, obj.x7, obj.y7)
             lwing12 = segment_distance(self.x, self.y, obj.x7, obj.y7, obj.x8, obj.y8)
@@ -123,7 +123,17 @@ class Ball:
                 return False
 
         elif isinstance(obj, Gun):
-            pass
+            left = segment_distance(self.x, self.y, obj.x1, obj.y1, obj.x4, obj.y4)
+            right = segment_distance(self.x, self.y, obj.x2, obj.y2, obj.x3, obj.y3)
+            top = segment_distance(self.x, self.y, obj.x1, obj.y1, obj.x2, obj.y2)
+            hittank = left <= self.r or right <= self.r or top <= self.r
+
+            hithead = (self.x - obj.x) ** 2 + (self.y - obj.y) ** 2 <= (self.r + 22) ** 2
+
+            if hittank or hithead:
+                return True
+            else:
+                return False
 
 
 class Fireball(Ball):
@@ -135,19 +145,19 @@ class Fireball(Ball):
             balls.remove(self)
 
 
-
 class Gun:
     def __init__(self, screen):
         self.screen = screen
         self.f2_power = 10
         self.f2_on = 0
         self.an = 1
-        self.color = GREY
         self.x = 40
         self.y = 450
         self.vx = 0
         self.moving = False
         self.hp = 3
+        self.upcolor = [29, 150, 20]
+        self.downcolor = [29, 100, 20]
 
     def fire2_start(self, event):
         self.f2_on = 1
@@ -182,6 +192,13 @@ class Gun:
 
     def draw(self):
 
+        if self.hp == 2:
+            self.upcolor = [255, 165, 0]
+            self.downcolor = [255, 140, 0]
+        elif self.hp == 1:
+            self.upcolor = RED
+            self.downcolor = [178, 34, 34]
+
         y11 = self.y + 5 * math.sin(self.an)
         x11 = self.x - 5 * math.cos(self.an)
         y12 = self.y - 5 * math.sin(self.an)
@@ -191,26 +208,26 @@ class Gun:
         x21 = self.x - (self.f2_power + 20) * math.sin(self.an) + 5 * math.cos(self.an)
         y22 = self.y - (self.f2_power + 20) * math.cos(self.an) + 5 * math.sin(self.an)
         x22 = self.x - (self.f2_power + 20) * math.sin(self.an) - 5 * math.cos(self.an)
-        pygame.draw.polygon(self.screen, self.color, [[x11, y11], [x12, y12], [x21, y21], [x22, y22]])
+        pygame.draw.polygon(self.screen, GREY, [[x11, y11], [x12, y12], [x21, y21], [x22, y22]])
         pygame.draw.circle(self.screen, BLACK, [self.x, self.y], 22)
-        pygame.draw.circle(self.screen, [29, 150, 20], [self.x, self.y], 20)
-        x1 = self.x - 32
-        y1 = self.y
-        x2 = self.x - 32
-        y2 = self.y + 10
-        x3 = self.x - 20
-        y3 = self.y + 20
-        x4 = self.x + 32
-        y4 = self.y
-        x5 = self.x + 32
-        y5 = self.y + 10
-        x6 = self.x + 20
-        y6 = self.y + 20
+        pygame.draw.circle(self.screen, self.upcolor, [self.x, self.y], 20)
+        x1 = self.x1 = self.x - 32
+        y1 = self.y1 = self.y
+        x2 = self.x2 = self.x - 32
+        y2 = self.y2 = self.y + 10
+        x3 = self.x3 = self.x - 20
+        y3 = self.y3 = self.y + 20
+        x4 = self.x4 = self.x + 32
+        y4 = self.y4 = self.y
+        x5 = self.x5 = self.x + 32
+        y5 = self.y5 = self.y + 10
+        x6 = self.x6 = self.x + 20
+        y6 = self.y6 = self.y + 20
 
         pygame.draw.polygon(self.screen, BLACK,
                             [[x1 - 2, y1 - 2], [x2 - 2, y2], [x3 - 2, y3], [x6 + 2, y6], [x5 + 2, y5],
                              [x4 + 2, y4 - 2]])
-        pygame.draw.polygon(self.screen, [29, 100, 20], [[x1, y1], [x2, y2], [x3, y3], [x6, y6], [x5, y5], [x4, y4]])
+        pygame.draw.polygon(self.screen, self.downcolor, [[x1, y1], [x2, y2], [x3, y3], [x6, y6], [x5, y5], [x4, y4]])
 
         pygame.draw.circle(self.screen, BLACK, (x1, y6), 8)
         pygame.draw.circle(self.screen, BROWN, (x1, y6), 6)
@@ -487,6 +504,8 @@ while not finished:
         bom.draw()
         if bom.hittest(gun):
             gun.hp -= 1
+            pygame.draw.circle(screen, RED, (bom.x, bom.y), 20)
+            bombs.remove(bom)
 
     time += 1
 
@@ -497,12 +516,16 @@ while not finished:
     for plane in planes:
         plane.draw()
         plane.move()
-        if time % 50 == 0:
+        if time % 40 == 0:
             plane.drop_bomb()
 
     pygame.display.update()
 
     clock.tick(FPS)
+
+    if gun.hp <= 0:
+        finished = True
+        print("Игра окончена, ваш счет составил " + str(points) + " очков")
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
