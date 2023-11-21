@@ -1,5 +1,27 @@
 import math
 from random import choice
+import numpy as np
+
+
+def segment_distance(x, y, x1, y1, x2, y2):
+    v1 = np.array([x - x1, y - y1])
+    v2 = np.array([x - x2, y - y2])
+    v3 = np.array([x2 - x1, y2 - y1])
+    v4 = -v3
+
+    prod1 = np.dot(v1, v3)
+    prod2 = np.dot(v2, v4)
+
+    if prod1 * prod2 < 0:
+        return min(((x - x1) ** 2 + (y - y1) ** 2) ** 0.5, ((x - x2) ** 2 + (y - y2) ** 2) ** 0.5)
+    else:
+        if x2 != x1:
+            k = (y2 - y1) / (x2 - x1)
+            b1 = y1 - k * x1
+            return abs(y - k * x - b1) / (k ** 2 + 1) ** 0.5
+        else:
+            return abs(x - x1)
+
 
 import pygame
 
@@ -66,11 +88,37 @@ class Ball:
         pygame.draw.circle(self.screen, self.color, (self.x, self.y), self.r)
 
     def hittest(self, obj):
-        if (self.x - obj.x) ** 2 + (self.y - obj.y) ** 2 <= (self.r + obj.r) ** 2:
-            balls.remove(self)
-            return True
-        else:
-            return False
+        if isinstance(obj, Target):
+            if (self.x - obj.x) ** 2 + (self.y - obj.y) ** 2 <= (self.r + obj.r) ** 2:
+                balls.remove(self)
+                return True
+            else:
+                return False
+        elif isinstance(obj, Bomber):
+            ltail1 = segment_distance(self.x, self.y, obj.x1, obj.y1, obj.x4, obj.y4)
+            ltail2 = segment_distance(self.x, self.y, obj.x1, obj.y1, obj.x2, obj.y2)
+            ltail3 = segment_distance(self.x, self.y, obj.x4, obj.y4, obj.x3, obj.y3)
+            hittail = ltail1 <= self.r or ltail2 <= self.r or ltail3 <= self.r
+
+            lbody1 = segment_distance(self.x, self.y, obj.x2, obj.y2, obj.x2 + 50, obj.y2)
+            lbody2 = segment_distance(self.x, self.y, obj.x3, obj.y3, obj.x3 + 50, obj.y3)
+            hitbody = lbody1 <= self.r or lbody2 <= self.r
+
+            hitglass = (self.x - obj.xc) ** 2 + (self.y - obj.yc) ** 2 <= self.r ** 2
+
+            lwing11 = segment_distance(self.x, self.y, obj.x6, obj.y6, obj.x7, obj.y7)
+            lwing12 = segment_distance(self.x, self.y, obj.x7, obj.y7, obj.x8, obj.y8)
+            lwing13 = segment_distance(self.x, self.y, obj.x8, obj.y8, obj.x9, obj.y9)
+            lwing21 = segment_distance(self.x, self.y, obj.x10, obj.y10, obj.x11, obj.y11)
+            lwing22 = segment_distance(self.x, self.y, obj.x11, obj.y11, obj.x12, obj.y12)
+            lwing23 = segment_distance(self.x, self.y, obj.x12, obj.y12, obj.x13, obj.y13)
+            hitwings = lwing11 <= self.r or lwing12 <= self.r or lwing13 <= self.r
+            hitwings = hitwings or lwing21 <= self.r or lwing22 <= self.r or lwing23 <= self.r
+
+            if hittail or hitbody or hitglass or hitwings:
+                return True
+            else:
+                return False
 
 
 class Fireball(Ball):
@@ -129,7 +177,7 @@ class Gun:
 
     def targetting(self, event):
         if event and (event.pos[1] < self.y):
-            self.an = math.atan((event.pos[0]-self.x) / (event.pos[1]-self.y))
+            self.an = math.atan((event.pos[0] - self.x) / (event.pos[1] - self.y))
         if self.f2_on:
             self.color = RED
         else:
@@ -161,7 +209,9 @@ class Gun:
         x6 = self.x + 20
         y6 = self.y + 20
 
-        pygame.draw.polygon(self.screen, BLACK, [[x1 - 2, y1 - 2], [x2 - 2, y2], [x3 - 2, y3], [x6 + 2, y6], [x5 + 2, y5], [x4 + 2, y4 - 2]])
+        pygame.draw.polygon(self.screen, BLACK,
+                            [[x1 - 2, y1 - 2], [x2 - 2, y2], [x3 - 2, y3], [x6 + 2, y6], [x5 + 2, y5],
+                             [x4 + 2, y4 - 2]])
         pygame.draw.polygon(self.screen, [29, 100, 20], [[x1, y1], [x2, y2], [x3, y3], [x6, y6], [x5, y5], [x4, y4]])
 
         pygame.draw.circle(self.screen, BLACK, (x1, y6), 8)
@@ -273,6 +323,7 @@ class RestingTarget(Target):
     def randomization(self):
         pass
 
+
 class Bomber:
     def __init__(self, screen):
 
@@ -304,72 +355,72 @@ class Bomber:
     def draw(self):
 
         if self.forward:
-            xc = self.x + 70
-            yc = self.y
-            rc = 10
-            x1 = self.x
-            y1 = self.y - 20
-            x2 = self.x + 20
-            y2 = self.y - 10
-            x3 = self.x + 20
-            y3 = self.y + 10
-            x4 = self.x
-            y4 = self.y + 20
+            xc = self.xc = self.x + 70
+            yc = self.yc = self.y
+            rc = self.rc = 10
+            x1 = self.x1 = self.x
+            y1 = self.y1 = self.y - 20
+            x2 = self.x2 = self.x + 20
+            y2 = self.y2 = self.y - 10
+            x3 = self.x3 = self.x + 20
+            y3 = self.y3 = self.y + 10
+            x4 = self.x4 = self.x
+            y4 = self.y4 = self.y + 20
 
-            x5 = self.x + 20
-            y5 = self.y - 10
+            x5 = self.x5 = self.x + 20
+            y5 = self.y5 = self.y - 10
 
-            x6 = self.x + 35
-            y6 = self.y - 10
-            x7 = x6
-            y7 = self.y - 45
-            x8 = x7 + 15
-            y8 = y7
-            x9 = x8 + 5
-            y9 = self.y - 10
+            x6 = self.x6 = self.x + 35
+            y6 = self.y6 = self.y - 10
+            x7 = self.x7 = x6
+            y7 = self.y7 = self.y - 45
+            x8 = self.x8 = x7 + 15
+            y8 = self.y8 = y7
+            x9 = self.x9 = x8 + 5
+            y9 = self.y9 = self.y - 10
 
-            x10 = x6
-            y10 = self.y + 10
-            x11 = x10
-            y11 = self.y + 45
-            x12 = x11 + 15
-            y12 = y11
-            x13 = x12 + 5
-            y13 = self.y + 10
+            x10 = self.x10 = x6
+            y10 = self.y10 = self.y + 10
+            x11 = self.x11 = x10
+            y11 = self.y11 = self.y + 45
+            x12 = self.x12 = x11 + 15
+            y12 = self.y12 = y11
+            x13 = self.x13 = x12 + 5
+            y13 = self.y13 = self.y + 10
 
         else:
-            xc = self.x + 10
-            yc = self.y
-            rc = 10
-            x1 = self.x + 60
-            y1 = self.y - 10
-            x2 = self.x + 80
-            y2 = self.y - 20
-            x3 = self.x + 80
-            y3 = self.y + 20
-            x4 = self.x + 60
-            y4 = self.y + 10
+            xc = self.xc = self.x + 10
+            yc = self.yc = self.y
+            rc = self.rc = 10
+            x1 = self.x1 = self.x + 60
+            y1 = self.y1 = self.y - 10
+            x2 = self.x2 = self.x + 80
+            y2 = self.y2 = self.y - 20
+            x3 = self.x3 = self.x + 80
+            y3 = self.y3 = self.y + 20
+            x4 = self.x4 = self.x + 60
+            y4 = self.y4 = self.y + 10
 
-            x5 = self.x + 10
-            y5 = self.y - 10
+            x5 = self.x5 = self.x + 10
+            y5 = self.y5 = self.y - 10
 
-            x6 = self.x + 25
-            y6 = self.y - 10
-            x7 = self.x + 30
-            y7 = self.y - 45
-            x8 = x7 + 15
-            y8 = y7
-            x9 = x8
-            y9 = y6
+            x6 = self.x6 = self.x + 25
+            y6 = self.y6 = self.y - 10
+            x7 = self.x7 = self.x + 30
+            y7 = self.y7 = self.y - 45
+            x8 = self.x8 = x7 + 15
+            y8 = self.y8 = y7
+            x9 = self.x9 = x8
+            y9 = self.y9 = y6
 
-            x10 = x6
-            y10 = self.y + 10
-            x11 = x7
-            y11 = self.y + 45
-            x12 = x8
-            y12 = y11
-            x13 = x9
-            y13 = y10
+            x10 = self.x10 = x6
+            y10 = self.y10 = self.y + 10
+            x11 = self.x11 = x7
+            y11 = self.y11 = self.y + 45
+            x12 = self.x12 = x8
+            y12 = self.y12 = y11
+            x13 = self.x13 = x9
+            y13 = self.y13 = y10
 
         pygame.draw.polygon(self.screen, (139, 0, 0), [[x1, y1], [x2, y2], [x3, y3], [x4, y4]])
         pygame.draw.circle(self.screen, CYAN, (xc, yc), rc)
@@ -476,6 +527,10 @@ while not finished:
                     t.new_target()
                     points += 1
                     midscore = 0
+        for plane in planes:
+            if b.hittest(plane):
+                planes.remove(plane)
+                points += 1
     gun.power_up()
 
 pygame.quit()
