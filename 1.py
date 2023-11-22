@@ -59,7 +59,6 @@ class Ball:
         self.vx = 0
         self.vy = 0
         self.color = choice(GAME_COLORS)
-        self.live = 30
         self.resting_timer = 0
 
     def move(self):
@@ -329,6 +328,15 @@ class BadGun(Gun):
         self.f2_on = 0
         self.f2_power = 10
 
+    def move(self):
+        self.x += self.vx
+        if self.x >= WIDTH - 34:
+            self.x = WIDTH - 34
+            self.vx = -self.vx
+        if self.x <= 34:
+            self.x = 34
+            self.vx = -self.vx
+
 class Target:
     def __init__(self, screen):
         self.screen = screen
@@ -542,6 +550,7 @@ class Bomb(Ball):
 
 
 pygame.init()
+pygame.display.set_caption('Пушка!')
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 bullet = 0
@@ -569,19 +578,21 @@ while not finished:
     midscore_text = font.render("Количество попыток: " + str(midscore), True, BLACK)
     screen.blit(midscore_text, (270, 525))
 
-    if time % 400 == 0 and len(badguns) < 6:
+    if time % 200 == 0 and len(badguns) < 6:
         badguns.append(BadGun(screen, choice(range(100, 600)), choice(range(100, 300))))
 
     for bad in badguns:
         bad.draw()
         bad.power_up()
-        bad.move()
+        if not bad.f2_on:
+            bad.move()
         if bad.timer % 80 == 0:
             bad.vx = choice(range(-10, 10))
 
         if bad.timer % 100 == 0:
             firing = 0
-            period = choice(range(10, 50))
+            v0 = ((1.2*(gun.x - bad.x)**2)/(2*math.cos(bad.an)**2 * (abs(gun.y - bad.y) + abs(gun.x - bad.x)*math.tan(bad.an))))**0.5
+            period = 0.7*v0
             bad.fire2_start()
         if bad.f2_on:
             bad.firing += 1
@@ -590,7 +601,7 @@ while not finished:
                 bad.firing = 0
         bad.timer += 1
 
-    if time % 200 == 0 and counter < 5:
+    if time % 150 == 0 and counter < 5:
         Bomber(screen)
         counter += 1
 
@@ -613,8 +624,8 @@ while not finished:
     for plane in planes:
         plane.draw()
         plane.move()
-        if time % 40 == 0:
-            plane.drop_bomb()
+        #if time % 40 == 0:
+        #    plane.drop_bomb()
 
     for bb in badballs:
         bb.move()
