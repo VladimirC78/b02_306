@@ -169,27 +169,42 @@ class Gun:
         self.upcolor = [29, 150, 20]
         self.downcolor = [29, 100, 20]
         self.timer = 0
+        self.fireballshot = 0
+        self.trishot = False
 
     def fire2_start(self, event):
         self.f2_on = 1
 
     def fire2_end(self, event):
-        """Выстрел мячом.
-
-        Происходит при отпускании кнопки мыши.
-        Начальные значения компонент скорости мяча vx и vy зависят от положения мыши.
-        """
-        global balls, bullet
-        bullet += 1
-        if flag == 'classic':
-            new_ball = Ball(self.screen, gun.x, gun.y)
-        elif flag == 'fb':
-            new_ball = Fireball(self.screen, gun.x, gun.y)
+        global balls
         if event.pos[1] < self.y:
             self.an = math.atan((event.pos[0] - self.x) / (event.pos[1] - self.y))
-        new_ball.vx = - self.f2_power * math.sin(self.an)
-        new_ball.vy = self.f2_power * math.cos(self.an)
-        balls.append(new_ball)
+
+        if self.trishot:
+            new_ball1 = Ball(self.screen, gun.x, gun.y)
+            new_ball2 = Ball(self.screen, gun.x, gun.y)
+            new_ball3 = Ball(self.screen, gun.x, gun.y)
+        elif self.fireballshot:
+            new_ball = Fireball(self.screen, gun.x, gun.y)
+            self.fireballshot = False
+        else:
+            new_ball = Ball(self.screen, gun.x, gun.y)
+
+        if not self.trishot:
+            new_ball.vx = - self.f2_power * math.sin(self.an)
+            new_ball.vy = self.f2_power * math.cos(self.an)
+            balls.append(new_ball)
+        else:
+            new_ball1.vx = - self.f2_power * math.sin(self.an - 0.17)
+            new_ball1.vy = self.f2_power * math.cos(self.an - 0.17)
+            new_ball2.vx = - self.f2_power * math.sin(self.an)
+            new_ball2.vy = self.f2_power * math.cos(self.an)
+            new_ball3.vx = - self.f2_power * math.sin(self.an + 0.17)
+            new_ball3.vy = self.f2_power * math.cos(self.an + 0.17)
+            balls.append(new_ball1)
+            balls.append(new_ball2)
+            balls.append(new_ball3)
+            self.trishot = False
         self.f2_on = 0
         self.f2_power = 10
 
@@ -654,12 +669,6 @@ while not finished:
         elif event.type == pygame.MOUSEMOTION:
             gun.targetting(event)
         elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_f:
-                flag = 'fb'
-            if event.key == pygame.K_c:
-                flag = 'classic'
-            if event.key == pygame.K_m:
-                flag = 'missile'
             if event.key == pygame.K_a:
                 gun.vx = -5
             if event.key == pygame.K_d:
@@ -676,6 +685,10 @@ while not finished:
                 t.hp -= 1
                 if t.hp == 0:
                     t.live = False
+                    if isinstance(t, RestingTarget):
+                        gun.fireballshot = True
+                    else:
+                        gun.trishot = True
                     targets.remove(t)
                     t.new_target()
                     points += 1
