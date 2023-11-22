@@ -44,7 +44,7 @@ WHITE = 0xFFFFFF
 GREY = 0x7D7D7D
 BROWN = (160, 128, 96)
 
-GAME_COLORS = [RED, BLUE, YELLOW, GREEN, MAGENTA, CYAN]
+GAME_COLORS = [BLUE, YELLOW, GREEN, MAGENTA, CYAN]
 
 WIDTH = 800
 HEIGHT = 600
@@ -89,7 +89,8 @@ class Ball:
 
     def draw(self):
         pygame.draw.circle(self.screen, BLACK, (self.x, self.y), self.r + 2)
-        pygame.draw.circle(self.screen, self.color, (self.x, self.y), self.r)
+        if not (self in badballs):
+            pygame.draw.circle(self.screen, self.color, (self.x, self.y), self.r)
 
     def hittest(self, obj):
         if isinstance(obj, Target):
@@ -607,7 +608,7 @@ while not finished:
         if bad.timer % 100 == 0:
             firing = 0
             v0 = ((1.2*(gun.x - bad.x)**2)/(2*math.cos(bad.an)**2 * (abs(gun.y - bad.y) + abs(gun.x - bad.x)*math.tan(bad.an))))**0.5
-            period = 0.7*v0
+            period = abs(0.7*v0)
             bad.fire2_start()
         if bad.f2_on:
             bad.firing += 1
