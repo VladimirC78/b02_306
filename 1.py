@@ -624,8 +624,8 @@ while not finished:
     for plane in planes:
         plane.draw()
         plane.move()
-        #if time % 40 == 0:
-        #    plane.drop_bomb()
+        if time % 40 == 0:
+            plane.drop_bomb()
 
     for bb in badballs:
         bb.move()
