@@ -572,6 +572,8 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 bullet = 0
 balls = []
 targets = []
+bomberspawn = 150
+badgunspawn = 200
 font = pygame.font.Font(None, 36)
 clock = pygame.time.Clock()
 gun = Gun(screen, 40, 450)
@@ -594,7 +596,7 @@ while not finished:
     midscore_text = font.render("Количество попыток: " + str(midscore), True, BLACK)
     screen.blit(midscore_text, (270, 525))
 
-    if time % 200 == 0 and len(badguns) < 6:
+    if time % badgunspawn == 0 and len(badguns) < 6:
         badguns.append(BadGun(screen, choice(range(100, 600)), choice(range(100, 300))))
 
     for bad in badguns:
@@ -617,7 +619,14 @@ while not finished:
                 bad.firing = 0
         bad.timer += 1
 
-    if time % 150 == 0 and counter < 5:
+    if time > 1000 and time < 2000:
+        bomberspawn = 100
+        badgunspawn = 150
+    elif time > 2000:
+        bomberspawn = 75
+        badgunspawn = 125
+
+    if time % bomberspawn == 0 and counter < 5:
         Bomber(screen)
         counter += 1
 
